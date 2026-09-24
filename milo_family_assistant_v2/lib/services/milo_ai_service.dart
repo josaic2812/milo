@@ -1,34 +1,51 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/milo_item.dart';
+import 'milo_rule_engine.dart';
 
 class MiloAiService {
-  /// In production set this to your secure backend endpoint.
-  /// Never put an OpenAI/LLM secret directly into the iOS app.
+  /// Production: use a secure backend. Never put an LLM secret in the app.
   final String? backendUrl;
+  final MiloRuleEngine rules;
 
-  MiloAiService({this.backendUrl});
+  MiloAiService({this.backendUrl, MiloRuleEngine? rules})
+      : rules = rules ?? MiloRuleEngine();
 
   Future<List<MiloItem>> analyse(String text) async {
+    final deterministic = rules.extract(text);
+
     if (backendUrl != null && backendUrl!.isNotEmpty) {
       final response = await http.post(
         Uri.parse(backendUrl!),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'text': text}),
+        body: jsonEncode({'text': text, 'local_items': deterministic.map(_encode).toList()}),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return _decode(response.body);
+        final remote = _decode(response.body);
+        return remote.isEmpty ? deterministic : _merge(remote, deterministic);
       }
       throw Exception('KI-Server antwortete mit ${response.statusCode}');
     }
-    return _demoAnalyse(text);
+
+    // Offline mode: the app remains useful without a network connection.
+    return deterministic.isEmpty ? _fallback(text) : deterministic;
   }
+
+  Map<String, dynamic> _encode(MiloItem item) => {
+    'type': item.type.name,
+    'title': item.title,
+    'detail': item.detail,
+    'assignee': item.assignee,
+    'due_label': item.dueLabel,
+    'amount': item.amount,
+    'priority': item.priority.name,
+  };
 
   List<MiloItem> _decode(String body) {
     final json = jsonDecode(body) as Map<String, dynamic>;
     final rows = (json['items'] as List<dynamic>? ?? []);
-    return rows.map((raw) {
-      final x = raw as Map<String, dynamic>;
+    return rows.asMap().entries.map((entry) {
+      final x = entry.value as Map<String, dynamic>;
       final type = switch (x['type']) {
         'event' => MiloItemType.event,
         'payment' => MiloItemType.payment,
@@ -41,7 +58,7 @@ class MiloAiService {
         _ => MiloPriority.normal,
       };
       return MiloItem(
-        id: '${DateTime.now().microsecondsSinceEpoch}-${rows.indexOf(raw)}',
+        id: '${DateTime.now().microsecondsSinceEpoch}-${entry.key}',
         type: type,
         title: '${x['title'] ?? 'Neue Aufgabe'}',
         detail: '${x['detail'] ?? ''}',
@@ -53,59 +70,26 @@ class MiloAiService {
     }).toList();
   }
 
-  List<MiloItem> _demoAnalyse(String text) {
-    final lower = text.toLowerCase();
-    final result = <MiloItem>[];
-    String id(String suffix) => '${DateTime.now().microsecondsSinceEpoch}-$suffix';
-
-    if (lower.contains('wandertag') || lower.contains('ausflug')) {
-      result.add(MiloItem(
-        id: id('event'), type: MiloItemType.event,
-        title: 'Wandertag / Ausflug', detail: 'Termin aus dem Dokument erkannt',
-        assignee: 'Familie', dueLabel: 'Termin prüfen',
-        priority: MiloPriority.normal,
-      ));
-    }
-    final money = RegExp(r'(\d+(?:[,.]\d{1,2})?)\s*(?:€|euro)',
-            caseSensitive: false)
-        .firstMatch(text);
-    if (money != null) {
-      result.add(MiloItem(
-        id: id('payment'), type: MiloItemType.payment,
-        title: '${money.group(1)} € bezahlen',
-        detail: 'Geldbetrag aus dem Dokument erkannt',
-        assignee: 'Josef', dueLabel: 'Frist prüfen',
-        amount: double.tryParse(money.group(1)!.replaceAll(',', '.')),
-        priority: MiloPriority.urgent,
-      ));
-    }
-    if (lower.contains('unterschrift') || lower.contains('unterschrieben')) {
-      result.add(MiloItem(
-        id: id('signature'), type: MiloItemType.task,
-        title: 'Unterschrift erledigen',
-        detail: 'Eine Unterschrift wurde im Dokument erkannt',
-        assignee: 'Mama', dueLabel: 'Frist prüfen',
-        priority: MiloPriority.urgent,
-      ));
-    }
-    if (lower.contains('mitbringen') || lower.contains('jause')) {
-      result.add(MiloItem(
-        id: id('bring'), type: MiloItemType.checklist,
-        title: 'Benötigte Dinge vorbereiten',
-        detail: 'Mitbringen / Jause wurde erkannt',
-        assignee: 'Familie', dueLabel: 'Termin prüfen',
-        priority: MiloPriority.low,
-      ));
-    }
-    if (result.isEmpty) {
-      result.add(MiloItem(
-        id: id('generic'), type: MiloItemType.task,
-        title: 'Information prüfen',
-        detail: 'MILO hat Text erkannt, benötigt aber noch die echte KI-Analyse',
-        assignee: 'Familie', dueLabel: 'Offen',
-        priority: MiloPriority.normal,
-      ));
+  List<MiloItem> _merge(List<MiloItem> remote, List<MiloItem> local) {
+    final result = [...remote];
+    for (final localItem in local) {
+      final exists = result.any((remoteItem) =>
+          remoteItem.type == localItem.type &&
+          remoteItem.title.toLowerCase() == localItem.title.toLowerCase());
+      if (!exists) result.add(localItem);
     }
     return result;
   }
+
+  List<MiloItem> _fallback(String text) => [
+    MiloItem(
+      id: '${DateTime.now().microsecondsSinceEpoch}-fallback',
+      type: MiloItemType.task,
+      title: 'Information prüfen',
+      detail: text.replaceAll(RegExp(r'\s+'), ' ').trim(),
+      assignee: 'Familie',
+      dueLabel: 'Offen',
+      priority: MiloPriority.normal,
+    ),
+  ];
 }
