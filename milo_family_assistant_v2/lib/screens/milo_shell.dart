@@ -6,21 +6,15 @@ import 'calendar_screen.dart';
 import 'family_screen.dart';
 
 class MiloShell extends StatefulWidget {
-  const MiloShell({super.key});
+  final String familyId;
+  const MiloShell({super.key, required this.familyId});
   @override State<MiloShell> createState() => _MiloShellState();
 }
 
 class _MiloShellState extends State<MiloShell> {
   int index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final pages = [
-      const HomeScreen(),
-      const TasksScreen(),
-      const CalendarScreen(),
-      const FamilyScreen(),
-    ];
+  @override Widget build(BuildContext context) {
+    final pages = [const HomeScreen(), const TasksScreen(), const CalendarScreen(), const FamilyScreen()];
     return Scaffold(
       body: IndexedStack(index: index, children: pages),
       bottomNavigationBar: NavigationBar(
