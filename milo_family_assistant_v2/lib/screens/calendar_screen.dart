@@ -25,11 +25,15 @@ class CalendarScreen extends StatelessWidget {
     elevation: 0,
     child: ListTile(
       leading: Container(
-        width: 48, height: 48,
-        decoration: BoxDecoration(color: const Color(0xFFE5EEE8), borderRadius: BorderRadius.circular(15)),
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5EEE8),
+          borderRadius: BorderRadius.circular(15),
+        ),
         child: Icon(icon, color: const Color(0xFF2E6A4F)),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w750)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
       subtitle: Text(detail),
       trailing: Text(date, style: const TextStyle(fontWeight: FontWeight.w700)),
     ),
