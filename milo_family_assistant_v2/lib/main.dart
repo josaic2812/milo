@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/milo_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,7 @@ class MiloApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: green),
         scaffoldBackgroundColor: const Color(0xFFF5F7F4),
       ),
-      home: const HomeScreen(),
+      home: const MiloShell(),
     );
   }
 }
