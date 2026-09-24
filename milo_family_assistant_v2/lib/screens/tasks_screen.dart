@@ -33,7 +33,7 @@ class TasksScreen extends StatelessWidget {
         elevation: 0,
         child: ListTile(
           leading: Icon(r.$4 ? CupertinoIcons.circle : CupertinoIcons.checkmark_circle),
-          title: Text(r.$1, style: const TextStyle(fontWeight: FontWeight.w650)),
+          title: Text(r.$1, style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text(r.$2),
           trailing: Chip(label: Text(r.$3)),
         ),
