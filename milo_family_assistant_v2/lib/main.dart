@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'services/supabase_config.dart';
-import 'screens/milo_shell.dart';
+import 'services/milo_app_flow.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +22,7 @@ class MiloApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: green),
         scaffoldBackgroundColor: const Color(0xFFF5F7F4),
       ),
-      home: const MiloShell(),
+      home: const MiloAppFlow(),
     );
   }
 }
