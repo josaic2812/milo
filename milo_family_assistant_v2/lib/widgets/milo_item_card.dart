@@ -43,7 +43,7 @@ class MiloItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w750,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
                     decoration: item.completed ? TextDecoration.lineThrough : null)),
                 const SizedBox(height: 4),
                 Text(item.detail, style: const TextStyle(color: Colors.black54)),
