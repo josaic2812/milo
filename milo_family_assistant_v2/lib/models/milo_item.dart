@@ -6,7 +6,7 @@ class MiloItem {
   final MiloItemType type;
   final String title;
   final String detail;
-  final String assignee;
+  String assignee;
   final String dueLabel;
   final DateTime? dueDate;
   final double? amount;
