@@ -26,10 +26,25 @@ class MiloItem {
     this.completed = false,
   });
 
-  MiloItem copyWith({String? assignee, bool? completed}) => MiloItem(
-    id: id, type: type, title: title, detail: detail,
-    assignee: assignee ?? this.assignee, dueLabel: dueLabel,
-    dueDate: dueDate, amount: amount, priority: priority,
+  MiloItem copyWith({
+    String? title,
+    String? detail,
+    String? assignee,
+    String? dueLabel,
+    DateTime? dueDate,
+    double? amount,
+    MiloPriority? priority,
+    bool? completed,
+  }) => MiloItem(
+    id: id,
+    type: type,
+    title: title ?? this.title,
+    detail: detail ?? this.detail,
+    assignee: assignee ?? this.assignee,
+    dueLabel: dueLabel ?? this.dueLabel,
+    dueDate: dueDate ?? this.dueDate,
+    amount: amount ?? this.amount,
+    priority: priority ?? this.priority,
     completed: completed ?? this.completed,
   );
 }
